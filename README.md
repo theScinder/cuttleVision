@@ -4,7 +4,7 @@ Explorations of the neurovisual systems of cephalopods
 Fourier optics simulation of cuttlefish apertures and corresponding chromatic aberrations (octave)
 cuttlefish.m
 C1-cuttlefish%.tif - binary cuttlefish pupils, various levels of dilation/erosion
-
+Source for cuttlefish eye (original for pupil masks)
 
 Description of cuttlefish vision and Fourier optics simulation
 https://thescinder.com/2016/07/25/through-the-strange-eyes-of-a-cuttlefish/
