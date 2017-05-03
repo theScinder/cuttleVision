@@ -10,7 +10,7 @@ Description of cuttlefish vision and Fourier optics simulation
 https://thescinder.com/2016/07/25/through-the-strange-eyes-of-a-cuttlefish/
 Video example of cuttlefish vision
 https://www.youtube.com/watch?v=RAqWUJkBv-g
-Video coverage of the research by Stubbs & Stubbs from Ingrid Dawes of Drawcuriosity: 
+Video coverage of the research by Stubbs & Stubbs from Inés Dawson of Drawcuriosity: 
 https://www.youtube.com/watch?v=TjPhYUAY2qI&vl=en-GB
 
 
