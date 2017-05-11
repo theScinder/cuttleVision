@@ -16,3 +16,13 @@ https://www.youtube.com/watch?v=TjPhYUAY2qI&vl=en-GB
 
 Backgroud:
 http://www.pnas.org/content/113/29/8206.full.pdf
+
+
+Reference image for cuttlefish pupil masks:
+
+https://en.wikipedia.org/wiki/File:Cuttlefish_eye.jpg
+
+Sea_Cotton.jpg image source:
+https://en.wikipedia.org/wiki/Coral_reef#/media/File:Sea_Cotton.jpg
+
+
