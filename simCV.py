@@ -29,11 +29,12 @@ imgHeight = 48
 myChanels = 3
 n_visible = imgWidth *imgHeight*3
 n_visibleRGB = imgWidth *imgHeight*3
-n_hidden = 4096 # 2048 # hidden units
-lR = 1e-4
-myIter = 3000
-dispIt = 10# display every th iteration
-dORate = 0.33 # dropout Rate
+n_hidden = 2048 # 2048 # hidden units
+lR = 1e-5
+myIter = 60000
+dispIt = 100# display every th iteration
+dORate = 0.5 # dropout Rate
+decayRate = 0.99
 
 corruption_level = 0.0
 
@@ -81,14 +82,22 @@ if(1):
 def model(X, Y, W1,W2,W3,W4,W5, b, b_prime):
     tilde_X = X #
     H1 = tf.nn.relu(tf.matmul(tilde_X, W1) + b)
-    print(H1.shape)
-    H2 = tf.nn.relu(tf.matmul(H1,W2)+b)
-    H3 = tf.nn.relu(tf.matmul(H2,W3)+b)
-    H4 = tf.nn.relu(tf.matmul(H3,W4)+b)
+    D1 = tf.layers.dropout(inputs=H1,
+                               rate=dORate)
+    
+    H2 = tf.nn.relu(tf.matmul(D1,W2)+b)
+    D2 = tf.layers.dropout(inputs=H2,
+                               rate=dORate)
+    H3 = tf.nn.relu(tf.matmul(D2,W3)+b)
+    D3 = tf.layers.dropout(inputs=H3,
+                               rate=dORate)
+    H4 = tf.nn.relu(tf.matmul(D3,W4)+b)
+    D4 = tf.layers.dropout(inputs=H4,
+                               rate=dORate)
     #print(np.shape(Y))
     
     #print(np.shape(dO1))
-    Z = (tf.matmul(H4,W5) + b_prime)
+    Z = (tf.matmul(D4,W5) + b_prime)
     
     #Z = (tf.matmul(dO1,W_prime) + b_prime)
     return Z
@@ -116,7 +125,7 @@ train_op = tf.train.AdamOptimizer(learning_rate=lR,beta1=0.9,
 
 #Load data
 myTgts = np.load('./simCVTgts/simCVTgts.npy')
-myImgs = np.load('./simCVImgs/simCVImgs.npy')
+myImgs = myTgts
 
 trX = np.reshape(myImgs[0:800,:,:,:],[np.shape(myImgs[0:800,:,:,:])[0],n_visibleRGB])
 teX = np.reshape(myImgs[801:923,:,:,:],[np.shape(myImgs[801:923:,:,:])[0],n_visibleRGB])
@@ -140,7 +149,57 @@ with tf.Session() as sess:
             #mask_np = np.random.binomial(1,1-corruption_level, input_.shape)
             sess.run(train_op, feed_dict = {X: input_, Y: targets_})
         #mask_np = np.random.binomial(1,1-corruption_level, teX.shape)
-            lR = lR*0.9999
+        lR = lR*decayRate
+        if( (i) % dispIt == 0):
+            print("Epoch %i with training cost %.4e and cross-validation cost %.4e " % (i,sess.run(cost, feed_dict={X: trX, Y: trY}), sess.run(cost, feed_dict={X: tcvX, Y: tcvY}) ))
+            print("learning rate decayed to %e" %(lR))
+            myElapsed = time.time()-t
+            print("elapsed time ", myElapsed, " s")
+            
+    if(0):
+          test_xs = tcvX[0:10,:]
+          #recon = sess.run(ae['y'], feed_dict={ae['x']: test_xs_norm})
+          #mask_np = np.random.binomial(1,1, test_xs.shape)
+          recon = sess.run(Z,feed_dict = {X: test_xs})
+          print(recon.shape)
+          print(test_xs.shape)
+
+          fig, axs = plt.subplots(3, 10, figsize=(10, 2),dpi=80)
+          print("Targets subset >")
+          for example_i in range(10):
+                
+               axs[0][example_i].imshow(np.reshape(test_xs[example_i, :], (imgWidth,imgHeight,3)),cmap="gray")
+               axs[0][example_i].set_xticklabels([])
+               axs[0][example_i].set_yticklabels([])
+               axs[1][example_i].imshow(np.reshape(recon[example_i, ...], (imgWidth,imgHeight,3)),cmap="gray")
+               axs[1][example_i].set_xticklabels([])
+               axs[1][example_i].set_yticklabels([])
+               axs[2][example_i].imshow(np.reshape(tcvY[example_i, ...], (imgWidth,imgHeight,3)),cmap="gray")
+               axs[2][example_i].set_xticklabels([])
+               axs[2][example_i].set_yticklabels([])
+          plt.show()
+    print("Guesses subset ^^")
+    
+
+    # After pret-training as a simple autoencoder, swap the training input data
+    # Now instead of recreating the target image from self-same input, it must interpret chromatic aberration images
+    myImgs = np.load('./simCVImgs/simCVImgs.npy')
+    
+    trX = np.reshape(myImgs[0:800,:,:,:],[np.shape(myImgs[0:800,:,:,:])[0],n_visibleRGB])
+    teX = np.reshape(myImgs[801:923,:,:,:],[np.shape(myImgs[801:923:,:,:])[0],n_visibleRGB])
+    tcvX = np.reshape(myImgs[924:1023,:,:,:],[np.shape(myImgs[924:1023:,:,:])[0],n_visibleRGB])
+    lR = 3e-6
+
+    for i in range(myIter):
+        for start, end in zip(range(0, len(trX), 128),
+                              range(128, len(trX), 128)):
+            input_ = trX[start:end]
+            targets_ = trX[start:end]
+            #mask_np = np.random.binomial(1,1-corruption_level, input_.shape)
+            sess.run(train_op, feed_dict = {X: input_, Y: targets_})
+        #mask_np = np.random.binomial(1,1-corruption_level, teX.shape)
+	#decay learning rate after every epoch
+        lR = lR * decayRate
         if( (i) % dispIt == 0):
             print("Epoch %i with training cost %.4e and cross-validation cost %.4e " % (i,sess.run(cost, feed_dict={X: trX, Y: trY}), sess.run(cost, feed_dict={X: tcvX, Y: tcvY}) ))
             print("learning rate decayed to %e" %(lR))
