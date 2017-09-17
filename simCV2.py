@@ -25,8 +25,8 @@ t = time.time()
 
 # Setup parameters and hyperparameters
 imgWidth = 48
-imgHeight = 48
-myChanels = 3
+imgHeight = 64
+myChannels = 3
 n_visible = imgWidth *imgHeight*3
 n_visibleRGB = imgWidth *imgHeight*3
 n_hidden = 2048 # 2048 # hidden units
@@ -119,17 +119,17 @@ train_op = tf.train.AdamOptimizer(learning_rate=lR,beta1=0.9,
 #trX, teX = np.reshape(myImgs[0:800,:,:,0],[np.shape(myImgs[0:800,:,:,0])[0], n_visible]),np.reshape(myImgs[801:1023,:,:,0],[np.shape(myImgs[801:1023:,:,0])[0],n_visible])
 
 #Load data
-myTgts = np.load('./simCVTgts/simCVTgts.npy')
+myTgts = np.load('./data/out012Imgs.npy')
 myImgs = myTgts
 
-trX = np.reshape(myImgs[0:800,:,:,:],[np.shape(myImgs[0:800,:,:,:])[0],n_visibleRGB])
-teX = np.reshape(myImgs[801:923,:,:,:],[np.shape(myImgs[801:923:,:,:])[0],n_visibleRGB])
-tcvX = np.reshape(myImgs[924:1023,:,:,:],[np.shape(myImgs[924:1023:,:,:])[0],n_visibleRGB])
+trX = np.reshape(myImgs[0:2000,:,:,:],[np.shape(myImgs[0:2000,:,:,:])[0],n_visibleRGB])
+teX = np.reshape(myImgs[2001:2223,:,:,:],[np.shape(myImgs[2001:2223:,:,:])[0],n_visibleRGB])
+tcvX = np.reshape(myImgs[2224:2623,:,:,:],[np.shape(myImgs[2224:2623:,:,:])[0],n_visibleRGB])
 
 
-trY = np.reshape(myTgts[0:800,:,:,:],[np.shape(myTgts[0:800,:,:,:])[0],n_visibleRGB])
-teY = np.reshape(myTgts[801:923,:,:,:],[np.shape(myTgts[801:923:,:,:])[0],n_visibleRGB])
-tcvY = np.reshape(myTgts[924:1023,:,:,:],[np.shape(myTgts[924:1023:,:,:])[0],n_visibleRGB])
+trY = np.reshape(myTgts[0:2000,:,:,:],[np.shape(myTgts[0:2000,:,:,:])[0],n_visibleRGB])
+teY = np.reshape(myTgts[2001:2223,:,:,:],[np.shape(myTgts[2001:2223:,:,:])[0],n_visibleRGB])
+tcvY = np.reshape(myTgts[2224:2623,:,:,:],[np.shape(myTgts[2224:2623:,:,:])[0],n_visibleRGB])
 
 
 with tf.Session() as sess:
@@ -154,61 +154,7 @@ with tf.Session() as sess:
             print("elapsed time ", myElapsed, " s")
             dORate = dorate
             
-    if(0):
-          test_xs = tcvX[0:10,:]
-          #recon = sess.run(ae['y'], feed_dict={ae['x']: test_xs_norm})
-          #mask_np = np.random.binomial(1,1, test_xs.shape)
-          recon = sess.run(Z,feed_dict = {X: test_xs})
-          print(recon.shape)
-          print(test_xs.shape)
-
-          fig, axs = plt.subplots(3, 10, figsize=(10, 2),dpi=80)
-          print("Targets subset >")
-          for example_i in range(10):
-                
-               axs[0][example_i].imshow(np.reshape(test_xs[example_i, :], (imgWidth,imgHeight,3)),cmap="gray")
-               axs[0][example_i].set_xticklabels([])
-               axs[0][example_i].set_yticklabels([])
-               axs[1][example_i].imshow(np.reshape(recon[example_i, ...], (imgWidth,imgHeight,3)),cmap="gray")
-               axs[1][example_i].set_xticklabels([])
-               axs[1][example_i].set_yticklabels([])
-               axs[2][example_i].imshow(np.reshape(tcvY[example_i, ...], (imgWidth,imgHeight,3)),cmap="gray")
-               axs[2][example_i].set_xticklabels([])
-               axs[2][example_i].set_yticklabels([])
-          plt.show()
-    print("Guesses subset ^^")
-    
-
-    # After pret-training as a simple autoencoder, swap the training input data
-    # Now instead of recreating the target image from self-same input, it must interpret chromatic aberration images
-    myImgs = np.load('./simCVImgs/simCVImgs.npy')
-    
-    trX = np.reshape(myImgs[0:800,:,:,:],[np.shape(myImgs[0:800,:,:,:])[0],n_visibleRGB])
-    teX = np.reshape(myImgs[801:923,:,:,:],[np.shape(myImgs[801:923:,:,:])[0],n_visibleRGB])
-    tcvX = np.reshape(myImgs[924:1023,:,:,:],[np.shape(myImgs[924:1023:,:,:])[0],n_visibleRGB])
-    lR = 1e-12
-
-    for i in range(myIter):
-        for start, end in zip(range(0, len(trX), 128),
-                              range(128, len(trX), 128)):
-            input_ = trX[start:end]
-            targets_ = trX[start:end]
-            #mask_np = np.random.binomial(1,1-corruption_level, input_.shape)
-            sess.run(train_op, feed_dict = {X: input_, Y: targets_})
-        #mask_np = np.random.binomial(1,1-corruption_level, teX.shape)
-	#decay learning rate after every epoch
-        lR = lR * decayRate
-        if( (i) % dispIt == 0):
-            myDO = dORate
-            dORate = 0.0
-            print("Epoch %i with training cost %.4e and cross-validation cost %.4e " % (i,sess.run(cost, feed_dict={X: trX, Y: trY}), sess.run(cost, feed_dict={X: tcvX, Y: tcvY}) ))
-            print("learning rate decayed to %e" %(lR))
-            myElapsed = time.time()-t
-            print("elapsed time ", myElapsed, " s")
-            dORate = dorate
     if(1):
-          myDO = dORate
-          dORate = 0.0
           test_xs = tcvX[0:10,:]
           #recon = sess.run(ae['y'], feed_dict={ae['x']: test_xs_norm})
           #mask_np = np.random.binomial(1,1, test_xs.shape)
@@ -231,6 +177,7 @@ with tf.Session() as sess:
                axs[2][example_i].set_yticklabels([])
           plt.show()
     print("Guesses subset ^^")
+    
     #myElapsed = time.time()-t
     #print("elapsed time ", myElapsed, " s")
     print("Final Epoch %i with training cost %.4e and cross-validation cost %.4e " % (i,sess.run(cost, feed_dict={X: trX, Y: trY}), sess.run(cost, feed_dict={X: tcvX, Y: tcvY}) ))
