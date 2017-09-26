@@ -30,11 +30,11 @@ myChannels = 3
 n_visible = imgWidth *imgHeight*3
 n_visibleRGB = imgWidth *imgHeight*3
 n_hidden = 2048 # 2048 # hidden units
-lR = 1e-8
-myIter = 22000
+lR = 3e-5
+myIter = 400
 dispIt = 100# display every th iteration
-dORate = 0.5 # dropout Rate
-dorate = 0.5
+dORate = 0.0 # dropout Rate
+dorate = 0.0
 decayRate = 0.999 # after every epoch, retain this proportion learning rate
 
 corruption_level = 0.0
@@ -54,7 +54,7 @@ if(1):
     W_init2 = tf.random_uniform(shape=[n_hidden,n_hidden],
                                minval=-W_init_max,
                                maxval=W_init_max)
-    W_init3 = tf.random_uniform(shape=[n_hidden,n_hidden],
+    W_init3 = tf.random_uniform(shape=[n_hidden,n_hidden], 
                                minval=-W_init_max,
                                maxval=W_init_max)
     W_init4 = tf.random_uniform(shape=[n_hidden,n_hidden],
@@ -120,7 +120,9 @@ train_op = tf.train.AdamOptimizer(learning_rate=lR,beta1=0.9,
 
 #Load data
 myTgts = np.load('./data/out012Imgs.npy')
+myTgts = myTgts/np.max(myTgts)
 myImgs = myTgts
+print("max = %f" % np.max(myImgs)) 
 
 trX = np.reshape(myImgs[0:2000,:,:,:],[np.shape(myImgs[0:2000,:,:,:])[0],n_visibleRGB])
 teX = np.reshape(myImgs[2001:2223,:,:,:],[np.shape(myImgs[2001:2223:,:,:])[0],n_visibleRGB])
