@@ -82,13 +82,13 @@ if(1):
 
 def model(X, Y, W1,W2,W3,W4,W5, b, b_prime):
     tilde_X = X #
-    H1 = tf.nn.tanh(tf.matmul(tilde_X, W1) + b)
+    H1 = tf.nn.relu(tf.matmul(tilde_X, W1) + b)
     D1 = H1#tf.layers.dropout(inputs=H1,rate=dORate)
-    H2 = tf.nn.tanh(tf.matmul(D1,W2)+b)
+    H2 = tf.nn.relu(tf.matmul(D1,W2)+b)
     D2 = H2#tf.layers.dropout(inputs=H2,rate=dORate)
-    H3 = tf.nn.tanh(tf.matmul(D2,W3)+b)
+    H3 = tf.nn.relu(tf.matmul(D2,W3)+b)
     D3 = H3#tf.layers.dropout(inputs=H3,rate=dORate)
-    H4 = tf.nn.tanh(tf.matmul(D3,W4)+b)
+    H4 = tf.nn.relu(tf.matmul(D3,W4)+b)
     D4 = H4#tf.layers.dropout(inputs=H4,rate=dORate)
     Z = (tf.matmul(D4,W5) + b_prime)
     return Z
@@ -119,7 +119,7 @@ myTgts = np.load('./data/simCVTgts/simCVTgts.npy')
 myImgs = np.load('./data/simCVImgs/simCVImgs.npy')
 myImgs = myImgs / np.max(myImgs)
 myTgts = myTgts / np.max(myTgts)
-myImgs = myTgts
+myTgts = myImgs
 trX = np.reshape(myImgs[0:800,:,:,:],[np.shape(myImgs[0:800,:,:,:])[0],n_visibleRGB])
 teX = np.reshape(myImgs[801:923,:,:,:],[np.shape(myImgs[801:923:,:,:])[0],n_visibleRGB])
 tcvX = np.reshape(myImgs[924:1023,:,:,:],[np.shape(myImgs[924:1023:,:,:])[0],n_visibleRGB])
