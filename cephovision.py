@@ -27,11 +27,11 @@ import time
 # user-definable flags
 FLAGS = tf.app.flags.FLAGS
 
-tf.app.flags.DEFINE_integer('maxSteps', 200,
+tf.app.flags.DEFINE_integer('maxSteps', 10,
                             """Number of batches to run.""")
 tf.app.flags.DEFINE_float('dropout', 0.5,
                             """proportion of weights to drop out.""")
-tf.app.flags.DEFINE_float('learningRate', 1e-4,
+tf.app.flags.DEFINE_float('learningRate', 1e-5,
                             """Learning Rate.""")
 tf.app.flags.DEFINE_integer('batchSize', 64,
                             """Minibatch size""")
@@ -46,7 +46,7 @@ mySeed = FLAGS.mySeed
 batchSize = FLAGS.batchSize
 maxSteps = FLAGS.maxSteps
 #
-dispIt = 10
+dispIt = 2
 convDepth = 4
 imgHeight = 48
 imgWidth = imgHeight
@@ -74,7 +74,7 @@ def cephovision(data,targets,mode):
 	        filters = convDepth,
         	kernel_size = [kern1Size,kern1Size],
 	        padding = "same",
-        	activation = tf.nn.relu,
+        	activation = tf.nn.tanh,
 		name = "conv1")
 	dropout1 = tf.layers.dropout(
 		inputs = conv1,
@@ -87,7 +87,7 @@ def cephovision(data,targets,mode):
 		filters = convDepth*2,
 		kernel_size = [kern2Size,kern2Size],
 		padding = "same",
-		activation = tf.nn.relu,
+		activation = tf.nn.tanh,
 		name = "conv2")
 	dropout2 = tf.layers.dropout(
 		inputs = conv2,
@@ -154,8 +154,8 @@ def main(unused_argv):
 		myTgts = np.load('./data/simCVTgts/simCVTgts.npy')
 		myImgs = myImgs / np.max(myImgs)
 		myTgts = myTgts / np.max(myTgts)
-		myData = myTgts
-		
+		#myTgts = myImgs
+		#myImgs = myTgts
 		nSamples = np.shape(myTgts)[0]
         
 
@@ -164,16 +164,16 @@ def main(unused_argv):
 		testSamples = round(0.2*nSamples)
 
 		# group and normalize the datasets
-		trainData = np.array(myData[testSamples+1:nSamples,:],dtype="float32")
+		trainData = np.array(myImgs[testSamples+1:nSamples,:],dtype="float32")
 		trainTgts = np.array(myTgts[testSamples+1:nSamples,:],dtype="float32")
 		trainData = (trainData - np.min(trainData) )/ np.max(trainData - np.min(trainData)) 
 
 
-		evalData = np.array(myData[0:evalSamples,:],dtype="float32")
+		evalData = np.array(myImgs[0:evalSamples,:],dtype="float32")
 		evalTgts = np.array(myTgts[0:evalSamples,:],dtype="float32")				
 		evalData = (evalData - np.min(evalData) )/ np.max(evalData - np.min(evalData)) 
 
-		testData = np.array(myData[evalSamples+1:testSamples,:],dtype="float32")
+		testData = np.array(myImgs[evalSamples+1:testSamples,:],dtype="float32")
 		testTgts = np.array(myTgts[evalSamples+1:testSamples,:],dtype="float32")           
 		testData = (testData - np.min(testData) )/ np.max(testData - np.min(testData)) 
 		
@@ -184,6 +184,7 @@ def main(unused_argv):
 				targets_ = trainTgts[start:end]
 				#mask_np = np.random.binomial(1,1-corruption_level, input_.shape)
 				sess.run(trainOp, feed_dict = {data: input_, targets: targets_, mode: True})
+			#lR = lR * 0.99
 			if( (i) % dispIt == 0):
 				start = 0
 				end = batchSize
@@ -193,6 +194,30 @@ def main(unused_argv):
 				print("learning rate decayed to %e" %(lR))
 				myElapsed = time.time()-t
 				print("elapsed time ", myElapsed, " s")
+
+		if(1):
+			testXS = testData[0:10,:]
+			testYS = testTgts[0:10,:]
+			#recon = sess.run(ae['y'], feed_dict={ae['x']: test_xs_norm})
+			#mask_np = np.random.binomial(1,1, test_xs.shape)
+			recon = sess.run(myOut,feed_dict = {data: testXS, targets: testYS, mode: False})
+			print(np.shape(testXS))
+			print(np.shape(recon))
+
+			fig, axs = plt.subplots(3, 10, figsize=(10, 2),dpi=80)
+			print("Targets subset >")
+			for example_i in range(10):
+
+				axs[0][example_i].imshow(np.reshape(testXS[example_i, :], (imgWidth,imgHeight,3)),cmap="gray")
+				axs[0][example_i].set_xticklabels([])
+				axs[0][example_i].set_yticklabels([])
+				axs[1][example_i].imshow(np.reshape(recon[example_i, ...], (imgWidth,imgHeight,3)))
+				axs[1][example_i].set_xticklabels([])
+				axs[1][example_i].set_yticklabels([])
+				axs[2][example_i].imshow(np.reshape(testYS[example_i, ...], (imgWidth,imgHeight,3)),cmap="gray")
+				axs[2][example_i].set_xticklabels([])
+				axs[2][example_i].set_yticklabels([])
+			plt.show()
 		if (0):
 			MTClassifier = learn.Estimator(model_fn = cephovision,
 				model_dir = "./model/",
