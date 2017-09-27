@@ -29,12 +29,12 @@ imgHeight = 48
 myChanels = 3
 n_visible = imgWidth *imgHeight*3
 n_visibleRGB = imgWidth *imgHeight*3
-n_hidden = 2048 # 2048 # hidden units
-lR = 1e-4
-myIter = 500
-dispIt = 100# display every th iteration
-dORate = 0.1 # dropout Rate
-dorate = 0.1
+n_hidden = 4096 # 2048 # hidden units
+lR = 1e-5
+myIter = 100
+dispIt = 10# display every th iteration
+dORate = 0.5 # dropout Rate
+dorate = 0.5
 decayRate = 0.99 # after every epoch, retain this proportion learning rate
 
 corruption_level = 0.0
@@ -82,20 +82,20 @@ if(1):
 
 def model(X, Y, W1,W2,W3,W4,W5, b, b_prime):
     tilde_X = X #
-    H1 = tf.nn.relu(tf.matmul(tilde_X, W1) + b)
+    H1 = tf.nn.sigmoid(tf.matmul(tilde_X, W1) + b)
     D1 = H1#tf.layers.dropout(inputs=H1,rate=dORate)
-    H2 = tf.nn.relu(tf.matmul(D1,W2)+b)
+    H2 = tf.nn.sigmoid(tf.matmul(D1,W2)+b)
     D2 = H2#tf.layers.dropout(inputs=H2,rate=dORate)
-    H3 = tf.nn.relu(tf.matmul(D2,W3)+b)
+    H3 = tf.nn.sigmoid(tf.matmul(D2,W3)+b)
     D3 = H3#tf.layers.dropout(inputs=H3,rate=dORate)
-    H4 = tf.nn.relu(tf.matmul(D3,W4)+b)
+    H4 = tf.nn.sigmoid(tf.matmul(D3,W4)+b)
     D4 = H4#tf.layers.dropout(inputs=H4,rate=dORate)
     Z = (tf.matmul(D4,W5) + b_prime)
     return Z
 
 Z = model(X, Y, W1,W2,W3,W4,W5, b, b_prime)
 
-cost = tf.reduce_sum(tf.pow(Y - Z, 2))
+cost = tf.reduce_mean(tf.pow(Y - Z, 2))
 if (0):
     train_op = tf.train.RMSPropOptimizer(learning_rate = lR,
                                          decay=0.9,
@@ -119,6 +119,7 @@ myTgts = np.load('./data/simCVTgts/simCVTgts.npy')
 myImgs = np.load('./data/simCVImgs/simCVImgs.npy')
 myImgs = myImgs / np.max(myImgs)
 myTgts = myTgts / np.max(myTgts)
+#myImgs = myTgts
 myTgts = myImgs
 trX = np.reshape(myImgs[0:800,:,:,:],[np.shape(myImgs[0:800,:,:,:])[0],n_visibleRGB])
 teX = np.reshape(myImgs[801:923,:,:,:],[np.shape(myImgs[801:923:,:,:])[0],n_visibleRGB])
