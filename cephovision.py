@@ -46,8 +46,8 @@ mySeed = FLAGS.mySeed
 batchSize = FLAGS.batchSize
 maxSteps = FLAGS.maxSteps
 #
-dispIt = 2
-convDepth = 4
+dispIt = 30
+convDepth = 32
 imgHeight = 48
 imgWidth = imgHeight
 pool1Size = 2   
@@ -101,6 +101,7 @@ def cephovision(data,targets,mode):
 		kernel_size = [kern2Size,kern2Size], 
 		strides = (1, 1), 
 		padding = 'same',
+		activation = tf.nn.tanh,
 		name = "conv3_")
 	dropout3 = tf.layers.dropout(
 		inputs = conv3_,
@@ -148,7 +149,7 @@ init = tf.global_variables_initializer()
 def main(unused_argv):
 	with tf.Session() as sess:
 		tf.initialize_all_variables().run() # deprecated, but tf.global_variables_initializer doesn't work at all
-    
+		lR = FLAGS.learningRate
 		# Load the training data
 		myImgs = np.load('./data/simCVImgs/simCVImgs.npy')
 		myTgts = np.load('./data/simCVTgts/simCVTgts.npy')
@@ -184,7 +185,7 @@ def main(unused_argv):
 				targets_ = trainTgts[start:end]
 				#mask_np = np.random.binomial(1,1-corruption_level, input_.shape)
 				sess.run(trainOp, feed_dict = {data: input_, targets: targets_, mode: True})
-			#lR = lR * 0.99
+			lR = lR * 0.99
 			if( (i) % dispIt == 0):
 				start = 0
 				end = batchSize
