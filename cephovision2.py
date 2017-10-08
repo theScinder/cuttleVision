@@ -33,12 +33,19 @@ tf.app.flags.DEFINE_float('dropout', 0.5,
                             """proportion of weights to drop out.""")
 tf.app.flags.DEFINE_float('learningRate', 1e-5,
                             """Learning Rate.""")
-tf.app.flags.DEFINE_integer('batchSize', 64,
+
+tf.app.flags.DEFINE_float('decayRate',.99,"""Save figure at every multiple of this factor""")
+tf.app.flags.DEFINE_integer('batchSize', 4,
                             """Minibatch size""")
 tf.app.flags.DEFINE_integer('mySeed',1337,"""pseudorandom number gen. seed""")
-tf.app.flags.DEFINE_integer('dispIt',2,"""pseudorandom number gen. seed""")
+tf.app.flags.DEFINE_integer('dispIt',2,"""display progress at every multiple of this factor""")
+tf.app.flags.DEFINE_integer('saveIt',20,"""Save figure at every multiple of this factor""")
+
+tf.app.flags.DEFINE_integer('convDepth',4,"""Save figure at every multiple of this factor""")
+
 
 # Set up hyperparameters
+convDepth = FLAGS.convDepth
 lR = FLAGS.learningRate
 dORate = FLAGS.dropout
 #epochs = FLAGS.maxSteps
@@ -47,9 +54,11 @@ mySeed = FLAGS.mySeed
 batchSize = FLAGS.batchSize
 maxSteps = FLAGS.maxSteps
 dispIt = FLAGS.dispIt
-#
-convDepth = 8
-imgHeight = 128
+saveIt = FLAGS.saveIt
+decayRate = FLAGS.decayRate
+convDepth = FLAGS.convDepth
+
+imgHeight = 256
 imgWidth = imgHeight
 pool1Size = 2   
 pool2Size = 2
@@ -154,7 +163,7 @@ def cephovision(data,targets,mode):
 		kernel_size = [kern1Size,kern1Size], 
 		strides = (1, 1), 
 		padding = 'same',
-		#activation = tf.nn.tanh,
+		activation = tf.nn.relu,
 		name = "conv7_")
 	myOut = conv7_
 
@@ -194,15 +203,17 @@ def main(unused_argv):
 		lR = FLAGS.learningRate
 		# Load the training data
 		#myImgs = np.load('./data/simCVTgts/simCVTgts.npy')
-		myTgts = np.load('./data/simCVTgts/simCVTgts.npy')
-		myImgs = np.load('./data/simCVImgs/simCVImgs.npy')
+		myTgts = np.load('./data/simCVTgts/patternCVTgts2.npy')
+		myImgs = np.load('./data/simCVImgs/patternCVImgs2.npy')
 		myImgs = myImgs / np.max(myImgs)
 		myTgts = myTgts / np.max(myTgts)
 		#myTgts = myImgs
 		#myImgs = myTgts
 		nSamples = np.shape(myTgts)[0]
-        
-
+		np.random.seed(mySeed)
+		np.random.shuffle(myTgts)
+		np.random.seed(mySeed)
+		np.random.shuffle(myImgs)
 		# Save 10% for the evaluations data set. 
 		evalSamples = round(0.1*nSamples)
 		testSamples = round(0.2*nSamples)
@@ -239,14 +250,14 @@ def main(unused_argv):
 				myElapsed = time.time()-t
 				print("elapsed time ", myElapsed, " s")
 
-			if( (i) % 3 == 0):
+			if( (i) % saveIt == 0):
 				testXS = testData[0:10,:]
 				testYS = testTgts[0:10,:]
 				#recon = sess.run(ae['y'], feed_dict={ae['x']: test_xs_norm})
 				#mask_np = np.random.binomial(1,1, test_xs.shape)
 				recon = sess.run(myOut,feed_dict = {data: testXS, targets: testYS, mode: False})
-				print(np.shape(testXS))
-				print(np.shape(recon))
+				#print(np.shape(testXS))
+				#print(np.shape(recon))
 
 				fig, axs = plt.subplots(3, 10, figsize=(10, 2),dpi=80)
 				print("Targets subset >")
@@ -262,7 +273,7 @@ def main(unused_argv):
 					axs[2][example_i].set_xticklabels([])
 					axs[2][example_i].set_yticklabels([])
 				#plt.show()
-				fig.savefig("./training2017Sept28/cephovisionStep%1.iTime%1.i.png" %(i,t))
+				fig.savefig("./patternTraining2017Oct08/cephovisionStep%1.iTime%1.i.png" %(i,t))
 		
 
 		
